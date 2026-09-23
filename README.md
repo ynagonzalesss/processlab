@@ -20,7 +20,7 @@ A language model is good at reading messy input. It should not be the thing that
 
 ## Status
 
-- [x] **Phase 1:** Rules engine, schema, guest-onboarding case study, tests
+- [x] **Phase 1:** Rules engine, schema, three example processes, tests
 - [ ] Phase 2: LLM extraction (plain-language description → validated process JSON)
 - [ ] Phase 3: Redesign view + before/after Mermaid diagrams
 - [ ] Phase 4: Simulation with sample cases + audit log
@@ -58,6 +58,27 @@ Handle refund or payment dispute     HUMAN       R3      75
 
 8 manual steps before → 4 that still need a human after. One hard gate: check-in release is a compliance rule (agreement signed AND ID verified), so AI is excluded from it by design.
 
+## Tested on three different processes
+
+The engine doesn't know anything about any of these industries. Same rules, three very different workflows:
+
+| Process | Steps | Keep | Automate | AI | AI + Human | Human | Hard gate 🔒 |
+|---|---|---|---|---|---|---|---|
+| [Guest onboarding](examples/guest_onboarding.json) | 12 | 4 | 3 | 1 | 2 | 2 | Release check-in details |
+| [Sales deal desk](examples/deal_desk.json) | 10 | 2 | 4 | 1 | 2 | 1 | Release order to billing |
+| [AP invoice approval](examples/invoice_approval.json) | 12 | 2 | 4 | 2 | 2 | 2 | Release payment |
+
+Across 34 steps, only 4 were a fit for AI acting alone, and another 6 for AI with a human approving. The rest were already automated, needed a clear rule, or needed a person.
+
+The same pattern showed up in all three: the step that **releases something you can't take back** (door codes, revenue, money) is always a tested rule, never AI. The AI earns its keep earlier, reading the messy inputs (guest messages, rep emails, invoice PDFs) that feed those rules.
+
+Run any of them:
+
+```bash
+python -m processlab.cli examples/deal_desk.json
+python -m processlab.cli examples/invoice_approval.json
+```
+
 ## The rules
 
 Evaluated top to bottom; first match wins.
@@ -94,7 +115,7 @@ processlab/
 │   ├── engine.py          # Deterministic lane assignment, no LLM
 │   ├── cli.py             # Run the engine on a process file
 │   └── config/thresholds.yaml
-├── examples/guest_onboarding.json
+├── examples/               # guest onboarding, deal desk, invoice approval
 ├── tests/
 └── docs/design-decisions.md
 ```
