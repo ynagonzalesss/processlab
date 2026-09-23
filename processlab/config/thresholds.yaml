@@ -1,0 +1,25 @@
+# ProcessLab rules configuration
+# Change these values to tune the engine. The decision order itself lives in
+# engine.py so it stays readable and testable.
+
+# Domains where a high-consequence decision must never be delegated to AI.
+high_stakes_domains:
+  - financial
+  - legal
+  - safety
+  - compliance
+
+# Weights for the opportunity score (how much a step would benefit from redesign).
+# The score is normalised to 0-100. Already-automated steps always score 0.
+weights:
+  volume:
+    low: 1
+    medium: 2
+    high: 3
+  exception_rate:
+    low: 1
+    medium: 2
+    high: 3
+  input_type:
+    structured: 1
+    unstructured: 2
