@@ -44,6 +44,7 @@
       "volume": "high",
       "exception_rate": "medium",
       "depends_on": ["extract_invoice_fields"],
+      "validates": ["extract_invoice_fields"],
       "notes": "Rule: quantities and amounts match within 2% tolerance."
     },
     {
@@ -58,7 +59,7 @@
       "domains": ["financial"],
       "volume": "high",
       "exception_rate": "low",
-      "depends_on": ["extract_invoice_fields"],
+      "depends_on": ["three_way_match"],
       "notes": "Rule: same vendor + invoice number, or same vendor + amount + date."
     },
     {

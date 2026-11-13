@@ -65,6 +65,7 @@ class Step(BaseModel):
     exception_rate: Level
     already_automated: bool = False
     depends_on: list[str] = Field(default_factory=list)
+    validates: list[str] = Field(default_factory=list)  # upstream steps whose output this step checks
     notes: str | None = None
 
 
@@ -89,6 +90,9 @@ class Process(BaseModel):
                 raise ValueError(f"Step '{step.id}' depends on unknown steps: {missing}")
             if step.id in step.depends_on:
                 raise ValueError(f"Step '{step.id}' depends on itself")
+            unknown = [v for v in step.validates if v not in known or v == step.id]
+            if unknown:
+                raise ValueError(f"Step '{step.id}' validates unknown steps: {unknown}")
 
         # Cycle detection (DFS, three-colour)
         graph = {s.id: s.depends_on for s in self.steps}

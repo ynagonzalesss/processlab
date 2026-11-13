@@ -43,6 +43,7 @@
       "volume": "high",
       "exception_rate": "medium",
       "depends_on": ["capture_deal_request", "sync_opportunity"],
+      "validates": ["capture_deal_request"],
       "notes": "Rule: term, quantity, and product must be present; start date must be at least 14 days out, or flag."
     },
     {
@@ -87,7 +88,7 @@
       "domains": ["legal"],
       "volume": "low",
       "exception_rate": "high",
-      "depends_on": ["capture_deal_request"],
+      "depends_on": ["validate_deal_fields"],
       "notes": "AI summarizes redlines against standard terms and flags risky clauses; legal makes the call."
     },
     {
