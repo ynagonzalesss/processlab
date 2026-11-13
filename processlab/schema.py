@@ -118,6 +118,7 @@ class LaneDecision(BaseModel):
     reasons: list[str]
     hard_gate: bool = False
     opportunity_score: int = Field(ge=0, le=100)
+    fragile_on: list[str] = Field(default_factory=list)  # one-notch label changes that flip the lane
 
 
 class ProcessReport(BaseModel):
@@ -127,3 +128,4 @@ class ProcessReport(BaseModel):
     manual_steps_before: int
     manual_steps_after: int
     hard_gates: list[str]
+    warnings: list[str] = Field(default_factory=list)  # graph-level findings
