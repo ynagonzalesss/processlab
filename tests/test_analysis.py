@@ -55,3 +55,44 @@ def test_mermaid_has_every_step_and_edge():
     p = _process(_step("a"), _step("b", depends_on=["a"], **GATE))
     out = to_mermaid(p, analyze_process(p))
     assert out.startswith("flowchart TD") and "a --> b" in out and "🔒" in out
+
+
+def test_validating_step_clears_the_gate():
+    p = _process(
+        _step("read", **AI_STEP),
+        _step("check", depends_on=["read"], validates=["read"]),
+        _step("release", depends_on=["check"], **GATE),
+    )
+    assert analyze_process(p).warnings == []
+
+
+def test_route_that_skips_the_check_is_still_flagged():
+    p = _process(
+        _step("read", **AI_STEP),
+        _step("check", depends_on=["read"], validates=["read"]),
+        _step("side", depends_on=["read"]),
+        _step("release", depends_on=["check", "side"], **GATE),
+    )
+    assert len(analyze_process(p).warnings) == 1
+
+
+def test_ai_step_cannot_validate_ai_output():
+    p = _process(
+        _step("read", **AI_STEP),
+        _step("check", depends_on=["read"], validates=["read"], **AI_STEP),
+        _step("release", depends_on=["check"], **GATE),
+    )
+    assert len(analyze_process(p).warnings) == 1
+
+
+def test_validates_must_name_a_known_step():
+    import pytest
+    with pytest.raises(ValueError, match="validates unknown"):
+        _process(_step("a", validates=["nope"]))
+
+
+def test_shipped_examples_have_no_gate_warnings():
+    from pathlib import Path
+    for f in sorted((Path(__file__).parent.parent / "examples").glob("*.json")):
+        report = analyze_process(Process.model_validate_json(f.read_text(encoding="utf-8")))
+        assert report.warnings == [], f.name

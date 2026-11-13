@@ -41,23 +41,50 @@ def upstream(process: Process, step_id: str) -> list[str]:
     return seen
 
 
+def _reaches_unchecked(process: Process, lanes: dict[str, Lane], gate: str, source: str) -> bool:
+    """True if some route from `source` to `gate` passes no step that validates `source`.
+
+    A step only counts as a check if it declares `validates` and is not itself
+    an AI-alone step: a rule or a person has to do the checking.
+    """
+    steps = {s.id: s for s in process.steps}
+    seen: set[str] = set()
+    stack = [gate]
+    while stack:
+        node = stack.pop()
+        if node == source:
+            return True
+        if node in seen:
+            continue
+        seen.add(node)
+        if source in steps[node].validates and lanes[node] != Lane.AI:
+            continue  # this route is checked; don't look further up it
+        stack.extend(steps[node].depends_on)
+    return False
+
+
 def tainted_gates(process: Process, decisions: list[LaneDecision]) -> list[str]:
-    """Warn when a hard gate consumes output from a step where AI acts alone.
+    """Warn when a hard gate consumes unchecked output from a step where AI acts alone.
 
     A gate excludes AI from the decision itself, but if an unreviewed AI step
-    produced the gate's input, AI still influences the outcome.
+    produced the gate's input, AI still influences the outcome. Every route
+    from the AI step to the gate must pass a step that `validates` it.
     """
-    by_id = {d.step_id: d for d in decisions}
+    lanes = {d.step_id: d.lane for d in decisions}
     warnings = []
     for d in decisions:
         if not d.hard_gate:
             continue
-        ai_sources = [u for u in upstream(process, d.step_id) if by_id[u].lane == Lane.AI]
+        ai_sources = [
+            u
+            for u in upstream(process, d.step_id)
+            if lanes[u] == Lane.AI and _reaches_unchecked(process, lanes, d.step_id, u)
+        ]
         if ai_sources:
             warnings.append(
-                f"Hard gate '{d.step_id}' depends on unreviewed AI output from: "
-                f"{', '.join(sorted(ai_sources))}. Validate that input with a rule "
-                "or add a human check before the gate."
+                f"Hard gate '{d.step_id}' depends on unchecked AI output from: "
+                f"{', '.join(sorted(ai_sources))}. Route it through a step that "
+                "validates it (a rule or a human) before the gate."
             )
     return warnings
 

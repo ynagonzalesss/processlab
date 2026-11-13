@@ -30,6 +30,12 @@ The step attribute space is small enough (14,580 combinations) to test every cas
 
 The lane says *how* a step should be handled. The opportunity score (0–100) says *how much* redesigning it is worth, based on volume, exception rate, and input messiness. A step can be HUMAN and still high-opportunity (e.g. refund disputes), which points to a better tool for the human, not AI.
 
+## 7. Gates are checked for what feeds them
+
+Excluding AI from a gate's decision is not enough if AI produced the gate's input. The report walks `depends_on` back from every hard gate and warns if an AI-alone step can reach it by any route that skips a step declaring `validates` for that AI step. Checks must be declared rather than assumed: an intermediate step that merely uses the data does not count.
+
+The first run flagged two of the shipped examples. In deal desk, the terms summary read the raw captured request and so bypassed field validation. In invoice approval, the duplicate check read extracted fields in parallel with the 3-way match. Both now run after the validating step.
+
 ## Known limitations / next steps
 
 - Step attributes are hand-assigned in Phase 1. Phase 2 will extract them from text, and the attribute assignment itself will need a human review step.
