@@ -11,7 +11,9 @@
       "rule_clarity": "clear",
       "reversibility": "reversible",
       "consequence": "low",
-      "domains": ["operational"],
+      "domains": [
+        "operational"
+      ],
       "volume": "high",
       "exception_rate": "low",
       "already_automated": true
@@ -25,10 +27,14 @@
       "rule_clarity": "partial",
       "reversibility": "reversible",
       "consequence": "low",
-      "domains": ["financial"],
+      "domains": [
+        "financial"
+      ],
       "volume": "high",
       "exception_rate": "medium",
-      "depends_on": ["forward_to_ap_inbox"],
+      "depends_on": [
+        "forward_to_ap_inbox"
+      ],
       "notes": "Vendor, invoice number, PO number, amounts, due date. Every layout is different. Errors are caught by the 3-way match."
     },
     {
@@ -40,10 +46,17 @@
       "rule_clarity": "clear",
       "reversibility": "reversible",
       "consequence": "medium",
-      "domains": ["financial"],
+      "domains": [
+        "financial"
+      ],
       "volume": "high",
       "exception_rate": "medium",
-      "depends_on": ["extract_invoice_fields"],
+      "depends_on": [
+        "extract_invoice_fields"
+      ],
+      "validates": [
+        "extract_invoice_fields"
+      ],
       "notes": "Rule: quantities and amounts match within 2% tolerance."
     },
     {
@@ -55,10 +68,14 @@
       "rule_clarity": "clear",
       "reversibility": "reversible",
       "consequence": "medium",
-      "domains": ["financial"],
+      "domains": [
+        "financial"
+      ],
       "volume": "high",
       "exception_rate": "low",
-      "depends_on": ["extract_invoice_fields"],
+      "depends_on": [
+        "three_way_match"
+      ],
       "notes": "Rule: same vendor + invoice number, or same vendor + amount + date."
     },
     {
@@ -70,10 +87,14 @@
       "rule_clarity": "partial",
       "reversibility": "reversible",
       "consequence": "medium",
-      "domains": ["financial"],
+      "domains": [
+        "financial"
+      ],
       "volume": "high",
       "exception_rate": "medium",
-      "depends_on": ["extract_invoice_fields"],
+      "depends_on": [
+        "extract_invoice_fields"
+      ],
       "notes": "Line descriptions are free text. Miscoding affects financial reporting."
     },
     {
@@ -85,10 +106,15 @@
       "rule_clarity": "partial",
       "reversibility": "costly",
       "consequence": "medium",
-      "domains": ["financial", "relationship"],
+      "domains": [
+        "financial",
+        "relationship"
+      ],
       "volume": "medium",
       "exception_rate": "high",
-      "depends_on": ["three_way_match"]
+      "depends_on": [
+        "three_way_match"
+      ]
     },
     {
       "id": "approve_within_tolerance",
@@ -99,10 +125,15 @@
       "rule_clarity": "clear",
       "reversibility": "costly",
       "consequence": "medium",
-      "domains": ["financial"],
+      "domains": [
+        "financial"
+      ],
       "volume": "high",
       "exception_rate": "low",
-      "depends_on": ["three_way_match", "check_duplicate"],
+      "depends_on": [
+        "three_way_match",
+        "check_duplicate"
+      ],
       "notes": "Rule: matched, not a duplicate, and under the approval limit."
     },
     {
@@ -114,10 +145,15 @@
       "rule_clarity": "partial",
       "reversibility": "costly",
       "consequence": "high",
-      "domains": ["financial"],
+      "domains": [
+        "financial"
+      ],
       "volume": "low",
       "exception_rate": "high",
-      "depends_on": ["three_way_match", "check_duplicate"]
+      "depends_on": [
+        "three_way_match",
+        "check_duplicate"
+      ]
     },
     {
       "id": "handle_bank_detail_change",
@@ -128,7 +164,10 @@
       "rule_clarity": "none",
       "reversibility": "irreversible",
       "consequence": "high",
-      "domains": ["financial", "compliance"],
+      "domains": [
+        "financial",
+        "compliance"
+      ],
       "volume": "low",
       "exception_rate": "high",
       "notes": "The classic invoice-fraud vector. Requires call-back verification on a known number."
@@ -142,10 +181,16 @@
       "rule_clarity": "clear",
       "reversibility": "irreversible",
       "consequence": "high",
-      "domains": ["financial"],
+      "domains": [
+        "financial"
+      ],
       "volume": "high",
       "exception_rate": "low",
-      "depends_on": ["approve_within_tolerance", "approve_high_value", "handle_bank_detail_change"],
+      "depends_on": [
+        "approve_within_tolerance",
+        "approve_high_value",
+        "handle_bank_detail_change"
+      ],
       "notes": "Rule: approved AND not a duplicate AND vendor bank details verified. Money sent is hard to get back."
     },
     {
@@ -157,11 +202,15 @@
       "rule_clarity": "clear",
       "reversibility": "reversible",
       "consequence": "low",
-      "domains": ["relationship"],
+      "domains": [
+        "relationship"
+      ],
       "volume": "high",
       "exception_rate": "low",
       "already_automated": true,
-      "depends_on": ["release_payment"]
+      "depends_on": [
+        "release_payment"
+      ]
     },
     {
       "id": "answer_payment_status",
@@ -172,7 +221,9 @@
       "rule_clarity": "partial",
       "reversibility": "reversible",
       "consequence": "low",
-      "domains": ["relationship"],
+      "domains": [
+        "relationship"
+      ],
       "volume": "high",
       "exception_rate": "low",
       "notes": "\"Where's my payment?\" Answer comes from ERP status; low risk if slightly off."

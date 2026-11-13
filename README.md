@@ -149,7 +149,7 @@ If a future rule change breaks one of these, the build fails.
 
 The engine scores each step on its own. Two checks then look at the whole process:
 
-- **Gate inputs.** A hard gate excludes AI from the decision, but not from the data feeding it. If a gate depends, directly or through other steps, on a step where AI acts alone, the report warns and asks for a rule or human check in between.
+- **Gate inputs.** A hard gate excludes AI from the decision, but not from the data feeding it. If a gate depends, directly or through other steps, on a step where AI acts alone, every route between them must pass a step that declares it `validates` that AI output (a rule or a human, never another AI-alone step). Otherwise the report warns. This check caught two unguarded routes in the deal desk and invoice examples, which were then resequenced.
 - **Label sensitivity.** Step attributes are assigned by judgment. For each step, the report lists every one-notch label change (for example consequence low → medium) that would move it to a different lane, so a reviewer knows which labels to question first.
 
 Both appear in the CLI output and in `--json` (`warnings`, `fragile_on`).
