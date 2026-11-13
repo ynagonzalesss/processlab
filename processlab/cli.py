@@ -2,6 +2,7 @@
 
     python -m processlab.cli examples/guest_onboarding.json
     python -m processlab.cli examples/guest_onboarding.json --json
+    python -m processlab.cli examples/guest_onboarding.json --mermaid
 """
 
 import argparse
@@ -11,6 +12,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from processlab.diagram import to_mermaid
 from processlab.engine import analyze_process, load_config
 from processlab.schema import Lane, Process
 
@@ -28,6 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("process_file", type=Path)
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--json", action="store_true", help="Print the full report as JSON")
+    parser.add_argument("--mermaid", action="store_true", help="Print a Mermaid flowchart of the redesign")
     args = parser.parse_args(argv)
 
     try:
@@ -42,6 +45,10 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report.model_dump(mode="json"), indent=2))
         return 0
 
+    if args.mermaid:
+        print(to_mermaid(process, report))
+        return 0
+
     print(f"\n{report.process_name}\n{'=' * len(report.process_name)}\n")
     print(f"{'STEP':<36} {'LANE':<11} {'RULE':<5} {'OPP':>4}  GATE")
     print("-" * 66)
@@ -54,6 +61,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  • {d.step_name}")
         for r in d.reasons:
             print(f"      {r}")
+
+    fragile = [d for d in report.decisions if d.fragile_on]
+    if fragile:
+        print("\nSensitive labels (one notch changes the lane):")
+        for d in fragile:
+            print(f"  • {d.step_name}")
+            for f in d.fragile_on:
+                print(f"      {f}")
+
+    if report.warnings:
+        print("\nWarnings:")
+        for w in report.warnings:
+            print(f"  ⚠ {w}")
 
     print("\nSummary")
     for lane, n in report.lane_counts.items():
