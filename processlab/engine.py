@@ -152,7 +152,11 @@ def assign_lane(step: Step, config: dict[str, Any]) -> LaneDecision:
 
 def analyze_process(process: Process, config: dict[str, Any] | None = None) -> ProcessReport:
     config = config or load_config()
+    from processlab.analysis import fragility, tainted_gates  # avoids a circular import
+
     decisions = [assign_lane(step, config) for step in process.steps]
+    for step, decision in zip(process.steps, decisions):
+        decision.fragile_on = fragility(step, config)
     counts = Counter(d.lane for d in decisions)
     return ProcessReport(
         process_name=process.name,
@@ -161,4 +165,5 @@ def analyze_process(process: Process, config: dict[str, Any] | None = None) -> P
         manual_steps_before=sum(1 for s in process.steps if not s.already_automated),
         manual_steps_after=sum(1 for d in decisions if d.lane in (Lane.HUMAN, Lane.AI_ASSIST)),
         hard_gates=[d.step_id for d in decisions if d.hard_gate],
+        warnings=tainted_gates(process, decisions),
     )
