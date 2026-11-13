@@ -11,9 +11,7 @@
       "rule_clarity": "partial",
       "reversibility": "reversible",
       "consequence": "low",
-      "domains": [
-        "operational"
-      ],
+      "domains": ["operational"],
       "volume": "high",
       "exception_rate": "medium",
       "notes": "Extract customer, product, quantity, term, discount, and start date. Missing or wrong fields are caught by validation in the next step."
@@ -27,9 +25,7 @@
       "rule_clarity": "clear",
       "reversibility": "reversible",
       "consequence": "low",
-      "domains": [
-        "operational"
-      ],
+      "domains": ["operational"],
       "volume": "high",
       "exception_rate": "low",
       "already_automated": true
@@ -43,18 +39,11 @@
       "rule_clarity": "clear",
       "reversibility": "reversible",
       "consequence": "low",
-      "domains": [
-        "operational"
-      ],
+      "domains": ["operational"],
       "volume": "high",
       "exception_rate": "medium",
-      "depends_on": [
-        "capture_deal_request",
-        "sync_opportunity"
-      ],
-      "validates": [
-        "capture_deal_request"
-      ],
+      "depends_on": ["capture_deal_request", "sync_opportunity"],
+      "validates": ["capture_deal_request"],
       "notes": "Rule: term, quantity, and product must be present; start date must be at least 14 days out, or flag."
     },
     {
@@ -66,14 +55,10 @@
       "rule_clarity": "clear",
       "reversibility": "reversible",
       "consequence": "medium",
-      "domains": [
-        "financial"
-      ],
+      "domains": ["financial"],
       "volume": "high",
       "exception_rate": "low",
-      "depends_on": [
-        "validate_deal_fields"
-      ],
+      "depends_on": ["validate_deal_fields"],
       "notes": "Rule: up to 15% auto-approved, 15-25% sales manager, above 25% finance."
     },
     {
@@ -85,14 +70,10 @@
       "rule_clarity": "none",
       "reversibility": "costly",
       "consequence": "high",
-      "domains": [
-        "financial"
-      ],
+      "domains": ["financial"],
       "volume": "medium",
       "exception_rate": "high",
-      "depends_on": [
-        "route_by_discount_tier"
-      ],
+      "depends_on": ["route_by_discount_tier"],
       "notes": "Depends on deal strategy, customer relationship, and competitive pressure. Genuine judgment."
     },
     {
@@ -104,14 +85,10 @@
       "rule_clarity": "partial",
       "reversibility": "reversible",
       "consequence": "medium",
-      "domains": [
-        "legal"
-      ],
+      "domains": ["legal"],
       "volume": "low",
       "exception_rate": "high",
-      "depends_on": [
-        "validate_deal_fields"
-      ],
+      "depends_on": ["validate_deal_fields"],
       "notes": "AI summarizes redlines against standard terms and flags risky clauses; legal makes the call."
     },
     {
@@ -123,15 +100,10 @@
       "rule_clarity": "clear",
       "reversibility": "costly",
       "consequence": "medium",
-      "domains": [
-        "financial"
-      ],
+      "domains": ["financial"],
       "volume": "high",
       "exception_rate": "low",
-      "depends_on": [
-        "approve_nonstandard_discount",
-        "summarize_nonstandard_terms"
-      ]
+      "depends_on": ["approve_nonstandard_discount", "summarize_nonstandard_terms"]
     },
     {
       "id": "send_contract",
@@ -142,15 +114,11 @@
       "rule_clarity": "clear",
       "reversibility": "costly",
       "consequence": "medium",
-      "domains": [
-        "legal"
-      ],
+      "domains": ["legal"],
       "volume": "high",
       "exception_rate": "low",
       "already_automated": true,
-      "depends_on": [
-        "generate_quote"
-      ]
+      "depends_on": ["generate_quote"]
     },
     {
       "id": "draft_customer_update",
@@ -161,14 +129,10 @@
       "rule_clarity": "partial",
       "reversibility": "costly",
       "consequence": "medium",
-      "domains": [
-        "relationship"
-      ],
+      "domains": ["relationship"],
       "volume": "medium",
       "exception_rate": "medium",
-      "depends_on": [
-        "approve_nonstandard_discount"
-      ],
+      "depends_on": ["approve_nonstandard_discount"],
       "notes": "Explaining a partial approval or a counter-offer. Tone matters."
     },
     {
@@ -180,15 +144,10 @@
       "rule_clarity": "clear",
       "reversibility": "irreversible",
       "consequence": "high",
-      "domains": [
-        "financial",
-        "compliance"
-      ],
+      "domains": ["financial", "compliance"],
       "volume": "high",
       "exception_rate": "low",
-      "depends_on": [
-        "send_contract"
-      ],
+      "depends_on": ["send_contract"],
       "notes": "Rule: contract signed AND signed pricing matches the approved quote. Revenue recognition depends on it."
     }
   ]
