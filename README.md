@@ -1,5 +1,7 @@
 # ProcessLab
 
+[![tests](https://github.com/ynagonzalesss/processlab/actions/workflows/tests.yml/badge.svg)](https://github.com/ynagonzalesss/processlab/actions/workflows/tests.yml)
+
 **An AI that knows when *not* to use AI.**
 
 ProcessLab takes a business process and decides, step by step, where AI belongs and where it doesn't. Each step lands in one of five lanes, and every placement comes with a reason you can audit.
@@ -22,7 +24,8 @@ A language model is good at reading messy input. It should not be the thing that
 
 - [x] **Phase 1:** Rules engine, schema, three example processes, tests
 - [ ] Phase 2: LLM extraction (plain-language description → validated process JSON)
-- [ ] Phase 3: Redesign view + before/after Mermaid diagrams
+- [x] **Graph checks:** gate-input warnings, label sensitivity, Mermaid diagram of the redesign
+- [ ] Phase 3: Redesign view + before/after comparison
 - [ ] Phase 4: Simulation with sample cases + audit log
 - [ ] Phase 5: Streamlit UI + public deploy
 
@@ -57,6 +60,42 @@ Handle refund or payment dispute     HUMAN       R3      75
 ```
 
 8 manual steps before → 4 that still need a human after. One hard gate: check-in release is a compliance rule (agreement signed AND ID verified), so AI is excluded from it by design.
+
+The same redesign as a diagram (`python -m processlab.cli examples/guest_onboarding.json --mermaid`):
+
+```mermaid
+flowchart TD
+    record_booking["Record booking in PMS<br/><b>AUTOMATE</b>"]:::automate
+    send_agreement["Send renter agreement<br/><b>KEEP</b>"]:::keep
+    agreement_reminders["Remind guest to sign agreement<br/><b>KEEP</b>"]:::keep
+    request_id_verification["Request guest ID verification<br/><b>KEEP</b>"]:::keep
+    review_failed_verification["Follow up on failed ID verification<br/><b>AI + HUMAN</b>"]:::ai_assist
+    release_checkin_gate["Approve release of check-in details<br/><b>AUTOMATE 🔒</b>"]:::automate
+    send_checkin_info["Send check-in info 1 day before<br/><b>KEEP</b>"]:::keep
+    triage_guest_message["Triage inbound guest message<br/><b>AI</b>"]:::ai
+    dispatch_maintenance["Notify maintenance vendor<br/><b>AUTOMATE</b>"]:::automate
+    reply_to_guest["Reply to guest about their issue<br/><b>AI + HUMAN</b>"]:::ai_assist
+    apply_booking_adjustment["Apply discount or booking adjustment<br/><b>HUMAN</b>"]:::human
+    handle_refund_dispute["Handle refund or payment dispute<br/><b>HUMAN</b>"]:::human
+    record_booking --> send_agreement
+    send_agreement --> agreement_reminders
+    record_booking --> request_id_verification
+    request_id_verification --> review_failed_verification
+    agreement_reminders --> release_checkin_gate
+    request_id_verification --> release_checkin_gate
+    release_checkin_gate --> send_checkin_info
+    record_booking --> triage_guest_message
+    triage_guest_message --> dispatch_maintenance
+    triage_guest_message --> reply_to_guest
+    record_booking --> apply_booking_adjustment
+    record_booking --> handle_refund_dispute
+    classDef keep fill:#e5e7eb,stroke:#6b7280,color:#111827
+    classDef automate fill:#dbeafe,stroke:#2563eb,color:#111827
+    classDef ai fill:#ede9fe,stroke:#7c3aed,color:#111827
+    classDef ai_assist fill:#fef3c7,stroke:#d97706,color:#111827
+    classDef human fill:#fee2e2,stroke:#dc2626,color:#111827
+
+```
 
 ## Tested on three different processes
 
@@ -106,6 +145,15 @@ Thresholds and weights live in [`processlab/config/thresholds.yaml`](processlab/
 
 If a future rule change breaks one of these, the build fails.
 
+## Checks beyond the lane
+
+The engine scores each step on its own. Two checks then look at the whole process:
+
+- **Gate inputs.** A hard gate excludes AI from the decision, but not from the data feeding it. If a gate depends, directly or through other steps, on a step where AI acts alone, the report warns and asks for a rule or human check in between.
+- **Label sensitivity.** Step attributes are assigned by judgment. For each step, the report lists every one-notch label change (for example consequence low → medium) that would move it to a different lane, so a reviewer knows which labels to question first.
+
+Both appear in the CLI output and in `--json` (`warnings`, `fragile_on`).
+
 ## Project structure
 
 ```
@@ -113,6 +161,8 @@ processlab/
 ├── processlab/
 │   ├── schema.py          # Pydantic contracts (strict: unknown fields rejected)
 │   ├── engine.py          # Deterministic lane assignment, no LLM
+│   ├── analysis.py        # Gate-input warnings, label sensitivity
+│   ├── diagram.py         # Mermaid flowchart of the redesign
 │   ├── cli.py             # Run the engine on a process file
 │   └── config/thresholds.yaml
 ├── examples/               # guest onboarding, deal desk, invoice approval
