@@ -242,7 +242,13 @@ function openStep(id){sel=id;const s=proc.steps.find(x=>x.id===id),d=report.deci
 function closeI(){sel=null;$("#insp").classList.remove("on");$("#ibg").classList.remove("on");document.querySelectorAll(".card").forEach(c=>c.classList.remove("sel"))}
 function addStep(){let n=proc.steps.length+1;while(proc.steps.some(s=>s.id==="step_"+n))n++;const id="step_"+n;proc.steps.push({id,name:"New step "+n,actor:"Team",system:null,input_type:"unstructured",rule_clarity:"partial",reversibility:"reversible",consequence:"low",domains:["operational"],volume:"medium",exception_rate:"medium",already_automated:false,depends_on:[],validates:[],notes:null});sel=id;reanalyze(id,"Step added. Describe it on the right.")}
 function delStep(){const id=sel;proc.steps=proc.steps.filter(s=>s.id!==id);proc.steps.forEach(s=>{s.depends_on=s.depends_on.filter(x=>x!==id);s.validates=s.validates.filter(x=>x!==id)});closeI();reanalyze(proc.steps[0].id,"Step deleted")}
-function share(){const data={ex:current,p:proc};const enc=btoa(unescape(encodeURIComponent(JSON.stringify(data))));const url=location.origin+location.pathname+"#s="+enc;navigator.clipboard?.writeText(url).then(()=>toast("Link copied. Anyone with it sees your exact version."),()=>prompt("Copy this link:",url))}
+const b64u=u=>btoa(String.fromCharCode(...u)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""),ub64=t=>Uint8Array.from(atob(t.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+async function zip(str){return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer())}
+async function unzip(u){return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text()}
+function copyText(t){if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);return new Promise((ok,no)=>{const a=document.createElement("textarea");a.value=t;a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();const r=document.execCommand("copy");a.remove();r?ok():no()})}
+async function share(){let url=location.origin+location.pathname;const same=current!=="blank"&&JSON.stringify(proc)===JSON.stringify(original);
+ if(same)url+="#ex="+current;else{try{url+="#z="+b64u(await zip(JSON.stringify({ex:current,p:proc})))}catch{url+="#s="+btoa(unescape(encodeURIComponent(JSON.stringify({ex:current,p:proc}))))}}
+ history.replaceState(null,"",url);copyText(url).then(()=>toast("Link copied. Anyone with it sees your exact version."),()=>prompt("Copy this link:",url))}
 function exportPdf(){const c=report.lane_counts,byId=Object.fromEntries(proc.steps.map(s=>[s.id,s]));const rows=report.decisions.map(d=>`<tr><td>${esc(d.step_name)}<div class=w>${esc(byId[d.step_id].actor)}</div></td><td><span class="b" style="background:${LCOL[d.lane][0]};color:${LCOL[d.lane][1]}">${NICE[d.lane]}${d.hard_gate?' 🔒':''}</span></td><td>${d.rule_id}</td><td>${esc(d.reasons.join(" "))}</td></tr>`).join("");
  const w=window.open("","_blank");if(!w){toast("Allow pop-ups to export");return}
  w.document.write(`<!doctype html><html><head><title>${esc(proc.name)} · ProcessLab report</title><style>body{font:13px/1.5 system-ui,sans-serif;color:#111;margin:36px}h1{font-size:22px;margin:0}p{color:#555}.k{display:flex;gap:10px;margin:16px 0}.k div{border:1px solid #ddd;border-radius:8px;padding:8px 12px}.k b{display:block;font-size:18px}table{width:100%;border-collapse:collapse;margin-top:10px}td,th{border-bottom:1px solid #eee;padding:8px;text-align:left;vertical-align:top}th{font-size:11px;text-transform:uppercase;color:#777}.b{padding:2px 8px;border-radius:5px;font-weight:600;white-space:nowrap}.w{color:#777;font-size:11px}footer{margin-top:20px;color:#888;font-size:11px}</style></head><body><h1>${esc(proc.name)}</h1><p>${esc(proc.description||"")}</p><div class=k><div>Steps<b>${proc.steps.length}</b></div><div>Manual work<b>${report.manual_steps_before} → ${report.manual_steps_after}</b></div><div>AI involved<b>${(c.ai||0)+(c.ai_assist||0)}</b></div><div>Hard gates<b>${report.hard_gates.length}</b></div></div><table><tr><th>Step</th><th>Lane</th><th>Rule</th><th>Why</th></tr>${rows}</table>${report.warnings.length?'<p><b>Warnings:</b> '+report.warnings.map(esc).join(" ")+'</p>':''}<footer>Generated with ProcessLab Studio · processlab-studio.vercel.app</footer><script>setTimeout(()=>print(),300)<\/script></body></html>`);w.document.close()}
@@ -264,7 +270,12 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,input[typ
  else if(t.dataset.bool){s[t.dataset.bool]=t.checked;reanalyze(s.id)}});
 ["r-runs","r-min","r-rate"].forEach(i=>$("#"+i).addEventListener("input",()=>report&&roi()));
 $("#ibg").addEventListener("click",closeI);addEventListener("keydown",e=>{if(e.key==="Escape")closeI()});
-(function boot(){const m=location.hash.match(/#s=(.+)/);if(m){try{const d=JSON.parse(decodeURIComponent(escape(atob(m[1]))));loadExample(d.ex||"guest_onboarding",d.p);toast("Loaded a shared version");return}catch{}}loadExample(current)})();
+async function boot(){const h=location.hash;let m;try{
+ if(m=h.match(/^#ex=([a-z_]+)/)){await loadExample(m[1]);return}
+ if(m=h.match(/^#z=(.+)/)){const d=JSON.parse(await unzip(ub64(m[1])));await loadExample(d.ex||"guest_onboarding",d.p);toast("Loaded a shared version");return}
+ if(m=h.match(/^#s=(.+)/)){const d=JSON.parse(decodeURIComponent(escape(atob(m[1]))));await loadExample(d.ex||"guest_onboarding",d.p);toast("Loaded a shared version");return}
+}catch{toast("That share link looks incomplete, so here's the default demo")}loadExample(current)}
+boot();window.addEventListener("hashchange",boot);
 </script>
 </body>
 </html>
