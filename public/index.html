@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProcessLab Studio · An AI that knows when not to use AI</title>
+<meta name="description" content="Interactive demo of ProcessLab: a deterministic rules engine that decides, step by step, where AI belongs in a business process.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23111'/%3E%3Cpath d='M12 7h8M14 7v7l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V7' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='14' cy='21' r='1.6' fill='%234f6bff'/%3E%3Ccircle cx='18.5' cy='19' r='1.2' fill='%238b5cf6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f7f7f3;--card:#fff;--ink:#111214;--soft:#5d6168;--line:#e4e4de;--cobalt:#3651e8;
+--keep:#6b7280;--keepbg:#f0f1f3;--automate:#3651e8;--automatebg:#e9edff;--ai:#7c3aed;--aibg:#f1eaff;--assist:#0f766e;--assistbg:#e2f3f1;--human:#b4233c;--humanbg:#fbe8eb}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:400 15px/1.55 "Space Grotesk",system-ui,sans-serif;color:var(--ink);background:var(--paper);background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:32px 32px;background-attachment:fixed;-webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",monospace}
+button{font:inherit;cursor:pointer;color:inherit}
+.wrap{max-width:1400px;margin:0 auto;padding:0 28px}
+header{position:sticky;top:0;z-index:20;background:rgba(247,247,243,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:18px;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.02em}
+.logo .mk{width:34px;height:34px;border-radius:9px;background:var(--ink);display:grid;place-items:center}
+.logo small{font:500 11px "IBM Plex Mono",monospace;color:var(--soft);border:1px solid var(--line);padding:2px 7px;border-radius:5px;background:#fff}
+.tabs{display:flex;gap:4px;margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:11px;padding:4px}
+.tabs button{border:0;background:none;padding:7px 13px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--soft);transition:.2s}
+.tabs button.on{background:var(--ink);color:#fff}
+.gh{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:#fff;padding:8px 12px;border-radius:10px}
+.gh:hover{border-color:var(--ink)}
+.hero{padding:40px 0 22px;display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:end}
+.eyebrow{font:500 12px "IBM Plex Mono",monospace;color:var(--cobalt);letter-spacing:.04em;text-transform:uppercase}
+h1{font-size:clamp(34px,4vw,54px);line-height:1.02;letter-spacing:-.035em;margin:10px 0 12px;font-weight:700}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--cobalt),var(--ai));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--soft);max-width:56ch}
+.rules{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;font:400 12.5px/1.75 "IBM Plex Mono",monospace;color:var(--soft)}
+.rules b{color:var(--ink);font-weight:600}
+.proc{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:10px 0 16px;flex-wrap:wrap}
+.proc h2{font-size:22px;letter-spacing:-.02em}
+.proc p{color:var(--soft);font-size:14px;max-width:80ch}
+.reset{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;font-size:13px;font-weight:500}
+.reset:hover{border-color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat small{font:500 11.5px "IBM Plex Mono",monospace;color:var(--soft);text-transform:uppercase;letter-spacing:.04em}
+.stat b{display:block;font-size:28px;letter-spacing:-.03em;margin-top:4px}
+.stat b .arrow{color:var(--soft);font-weight:400;margin:0 6px}
+.stat.down b span.after{color:var(--assist)}
+.mix{display:flex;height:8px;border-radius:99px;overflow:hidden;margin-top:12px;background:var(--line)}
+.mix i{display:block;height:100%;transition:width .5s}
+.warn{display:flex;gap:12px;align-items:flex-start;background:#fff7e6;border:1px solid #f3d9a4;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:14px}
+.warn b{display:block}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start;padding-bottom:40px}
+.lane{background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:16px;padding:10px;min-height:200px}
+.lane-h{display:flex;align-items:center;gap:8px;padding:6px 6px 12px}
+.lane-h .dot{width:10px;height:10px;border-radius:3px}
+.lane-h b{font-size:14px}
+.lane-h small{font:500 11.5px "IBM Plex Mono",monospace;color:var(--soft);margin-left:auto}
+.lane-h p{display:none}
+.lane-d{font-size:12px;color:var(--soft);padding:0 6px 10px;margin-top:-6px}
+.card{position:relative;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:11px;padding:11px 12px;margin-bottom:8px;transition:transform .2s,box-shadow .2s,border-color .2s;animation:pop .35s cubic-bezier(.2,.8,.2,1) both}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 22px -14px rgba(17,18,20,.35)}
+.card.sel{box-shadow:0 0 0 2px var(--c)}
+.card.moved{animation:flash 1.2s ease}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}}
+@keyframes flash{0%{background:var(--bgc)}100%{background:#fff}}
+.card b{display:block;font-size:14px;font-weight:600;line-height:1.3}
+.card .who{font-size:12px;color:var(--soft);margin-top:3px}
+.card .row{display:flex;align-items:center;gap:6px;margin-top:9px}
+.chip{font:500 11px "IBM Plex Mono",monospace;padding:2px 6px;border-radius:5px;background:var(--bgc);color:var(--c)}
+.gate{font:600 11px "IBM Plex Mono",monospace;padding:2px 6px;border-radius:5px;background:var(--ink);color:#fff}
+.opp{margin-left:auto;display:flex;align-items:center;gap:5px;font:500 11px "IBM Plex Mono",monospace;color:var(--soft)}
+.opp i{display:block;width:34px;height:4px;border-radius:9px;background:var(--line);overflow:hidden}
+.opp i::after{content:"";display:block;height:100%;width:var(--o);background:var(--c)}
+.fr{position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:#e0a106}
+.empty{font-size:12.5px;color:var(--soft);text-align:center;padding:24px 6px;border:1px dashed var(--line);border-radius:10px}
+/* lanes */
+.L-keep{--c:var(--keep);--bgc:var(--keepbg)}.L-automate{--c:var(--automate);--bgc:var(--automatebg)}.L-ai{--c:var(--ai);--bgc:var(--aibg)}.L-ai_assist{--c:var(--assist);--bgc:var(--assistbg)}.L-human{--c:var(--human);--bgc:var(--humanbg)}
+/* inspector */
+.insp-bg{position:fixed;inset:0;background:rgba(17,18,20,.25);z-index:30;opacity:0;pointer-events:none;transition:.25s}
+.insp-bg.on{opacity:1;pointer-events:auto}
+.insp{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);background:var(--paper);border-left:1px solid var(--line);z-index:31;transform:translateX(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);overflow-y:auto;padding:22px 24px 40px}
+.insp.on{transform:none}
+.x{float:right;border:1px solid var(--line);background:#fff;border-radius:8px;width:32px;height:32px}
+.insp h3{font-size:21px;letter-spacing:-.02em;margin:6px 0 4px;line-height:1.25}
+.insp .who{color:var(--soft);font-size:13px}
+.verdict{margin:18px 0;padding:16px;border-radius:14px;background:var(--bgc);border:1px solid var(--c)}
+.verdict .lab{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--c);font-size:17px}
+.verdict ul{margin:10px 0 0 18px;font-size:14px}
+.verdict li{margin:4px 0}
+.sec{margin-top:18px}
+.sec>small{display:block;font:500 11.5px "IBM Plex Mono",monospace;color:var(--soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.attr{margin-bottom:12px}
+.attr label{display:block;font-size:13px;font-weight:500;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:none;border-radius:7px;padding:6px 8px;font:500 12px "IBM Plex Mono",monospace;color:var(--soft);white-space:nowrap}
+.seg button.on{background:var(--ink);color:#fff}
+.seg button.chg{box-shadow:inset 0 0 0 1.5px var(--cobalt)}
+.flip{font:400 12.5px/1.6 "IBM Plex Mono",monospace;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.flip div{padding:2px 0}
+.toggle{display:flex;align-items:center;gap:10px;font-size:13.5px;margin-top:4px}
+.toggle input{width:16px;height:16px;accent-color:var(--ink)}
+.hint{font-size:12.5px;color:var(--soft);margin-top:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:11px;font-size:14px;opacity:0;transition:.3s;z-index:40;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+footer{border-top:1px solid var(--line);padding:22px 0;color:var(--soft);font-size:13px;background:rgba(247,247,243,.9)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.load{opacity:.5;pointer-events:none}
+@media (max-width:1100px){.board{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.board{grid-template-columns:1fr}.tabs{display:none}.wrap{padding:0 16px}}
+</style>
+</head>
+<body>
+<header><div class="wrap hd">
+ <div class="logo"><span class="mk"><svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6h8M14 6v8l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V6"/><circle cx="14" cy="21" r="1.6" fill="#4f6bff" stroke="none"/><circle cx="18.5" cy="19" r="1.2" fill="#a78bfa" stroke="none"/></svg></span>ProcessLab <small>Studio</small></div>
+ <div class="tabs" id="tabs"></div>
+ <a class="gh" href="https://github.com/ynagonzalesss/processlab" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>Code</a>
+</div></header>
+
+<main class="wrap">
+ <section class="hero">
+  <div><div class="eyebrow">AI process design · live demo</div><h1>An AI that knows when <em>not</em> to use AI.</h1><p>ProcessLab maps every step of a business process to one of five lanes, from "keep as-is" to "human only", and explains why. Click any step and change its traits to watch the engine re-decide in real time.</p></div>
+  <div class="rules"><b>The LLM interprets. The rules engine decides.</b><br>R1 already automated → KEEP<br>R2 structured + clear rule → AUTOMATE<br>R3 irreversible / high stakes → HUMAN<br>R4 messy, low stakes, reversible → AI<br>R5 messy with real stakes → AI + HUMAN</div>
+ </section>
+
+ <div class="proc"><div><h2 id="pname">Loading…</h2><p id="pdesc"></p></div><button class="reset" id="reset">↺ Reset changes</button></div>
+ <div class="stats" id="stats"></div>
+ <div id="warns"></div>
+ <div class="board" id="board"></div>
+</main>
+
+<div class="insp-bg" id="ibg"></div>
+<aside class="insp" id="insp"></aside>
+<div class="toast" id="toast"></div>
+<footer><div class="wrap"><span>ProcessLab · built by Czarina Gonzales · rules engine in plain, tested Python</span><span class="mono">No LLM decides a lane. Ever.</span></div></footer>
+
+<script>
+const LANES=[["keep","Keep","Already automated. Don't re-solve it."],["automate","Automate","Structured input + clear rule. No AI."],["ai","AI","Messy input, low stakes, reversible."],["ai_assist","AI + Human","AI drafts, a human approves."],["human","Human","Irreversible or high-stakes judgment."]];
+const NICE={keep:"Keep",automate:"Automate",ai:"AI",ai_assist:"AI + Human",human:"Human"};
+const ATTRS=[["input_type","Input",["structured","unstructured"]],["rule_clarity","Rule clarity",["clear","partial","none"]],["reversibility","Reversibility",["reversible","costly","irreversible"]],["consequence","Consequence",["low","medium","high"]],["volume","Volume",["low","medium","high"]],["exception_rate","Exception rate",["low","medium","high"]]];
+const DOMAINS=["financial","legal","safety","compliance","relationship","operational"];
+const NAMES={guest_onboarding:"Guest onboarding",deal_desk:"Sales deal desk",invoice_approval:"Invoice approval"};
+let examples=[],current="guest_onboarding",original=null,proc=null,report=null,sel=null,prevLanes={};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2600)}
+async function loadExample(name){current=name;document.body.classList.add("load");try{const r=await fetch("/api/analyze?example="+name);const d=await r.json();if(d.error)throw d.error;examples=d.examples;original=JSON.parse(JSON.stringify(d.process));apply(d,true)}catch(e){$("#pname").textContent="Couldn't reach the engine";$("#pdesc").textContent=String(e)}finally{document.body.classList.remove("load")}}
+async function reanalyze(changedId){document.body.classList.add("load");try{const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(proc)});const d=await r.json();if(d.error)throw d.error;const before=report.decisions.find(x=>x.step_id===changedId)?.lane;apply(d,false);const after=report.decisions.find(x=>x.step_id===changedId)?.lane;if(before!==after)toast(`Engine moved this step: ${NICE[before]} → ${NICE[after]}`);else toast(`Still ${NICE[after]}. Rule ${report.decisions.find(x=>x.step_id===changedId).rule_id} holds.`)}catch(e){toast("Engine error: "+(typeof e==="string"?e:"invalid change"))}finally{document.body.classList.remove("load")}}
+function apply(d,fresh){prevLanes=fresh?{}:Object.fromEntries(report.decisions.map(x=>[x.step_id,x.lane]));proc=d.process;report=d.report;render();if(sel)openStep(sel)}
+function render(){
+ $("#tabs").innerHTML=examples.map(e=>`<button class="${e===current?'on':''}" data-ex="${e}">${NAMES[e]||e}</button>`).join("");
+ $("#pname").textContent=proc.name;$("#pdesc").textContent=proc.description||"";
+ const c=report.lane_counts,total=proc.steps.length;
+ $("#stats").innerHTML=`<div class="stat"><small>Steps</small><b>${total}</b><div class="mix">${LANES.map(([k])=>`<i class="L-${k}" style="width:${(c[k]||0)/total*100}%;background:var(--c)"></i>`).join("")}</div></div>
+ <div class="stat down"><small>Manual work</small><b>${report.manual_steps_before}<span class="arrow">→</span><span class="after">${report.manual_steps_after}</span></b></div>
+ <div class="stat"><small>AI involved</small><b>${(c.ai||0)+(c.ai_assist||0)}</b></div>
+ <div class="stat"><small>Hard gates</small><b>${report.hard_gates.length}</b></div>
+ <div class="stat"><small>Warnings</small><b style="color:${report.warnings.length?'#b45309':'inherit'}">${report.warnings.length}</b></div>`;
+ $("#warns").innerHTML=report.warnings.map(w=>`<div class="warn"><span>⚠️</span><div><b>Graph check</b>${esc(w)}</div></div>`).join("");
+ const byId=Object.fromEntries(proc.steps.map(s=>[s.id,s]));
+ $("#board").innerHTML=LANES.map(([k,n,d])=>{const ds=report.decisions.filter(x=>x.lane===k);return `<div class="lane L-${k}"><div class="lane-h"><span class="dot" style="background:var(--c)"></span><b>${n}</b><small>${ds.length}</small></div><div class="lane-d">${d}</div>${ds.length?ds.map(x=>{const s=byId[x.step_id];const moved=prevLanes[x.step_id]&&prevLanes[x.step_id]!==x.lane;return `<button class="card L-${k} ${sel===x.step_id?'sel':''} ${moved?'moved':''}" data-id="${x.step_id}">${x.fragile_on.length?'<span class="fr" title="One label change away from flipping lanes"></span>':''}<b>${esc(x.step_name)}</b><div class="who">${esc(s.actor)}${s.system?' · '+esc(s.system):''}</div><div class="row"><span class="chip">${x.rule_id}</span>${x.hard_gate?'<span class="gate">🔒 gate</span>':''}<span class="opp" style="--o:${x.opportunity_score}%"><i></i>${x.opportunity_score}</span></div></button>`}).join(""):'<div class="empty">No steps in this lane</div>'}</div>`}).join("");
+}
+function openStep(id){sel=id;const s=proc.steps.find(x=>x.id===id),d=report.decisions.find(x=>x.step_id===id),o=original.steps.find(x=>x.id===id)||{};
+ document.querySelectorAll(".card").forEach(c=>c.classList.toggle("sel",c.dataset.id===id));
+ $("#insp").innerHTML=`<button class="x" id="close">✕</button><div class="eyebrow">Step · ${esc(s.id)}</div><h3>${esc(s.name)}</h3><div class="who">${esc(s.actor)}${s.system?' · '+esc(s.system):''}</div>
+ <div class="verdict L-${d.lane}"><div class="lab">${NICE[d.lane]}<span class="chip">${d.rule_id}</span>${d.hard_gate?'<span class="gate">🔒 hard gate</span>':''}</div><ul>${d.reasons.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>
+ <div class="sec"><small>Step traits · change any to re-run the engine</small>
+ <div class="attr"><label>Already automated</label><label class="toggle"><input type="checkbox" data-bool="already_automated" ${s.already_automated?'checked':''}> This step already runs on its own today</label></div>
+ ${ATTRS.map(([k,n,opts])=>`<div class="attr"><label>${n}</label><div class="seg">${opts.map(v=>`<button data-k="${k}" data-v="${v}" class="${s[k]===v?'on':''} ${o[k]!==s[k]&&s[k]===v?'chg':''}">${v}</button>`).join("")}</div></div>`).join("")}
+ <div class="attr"><label>Domains</label><div class="seg">${DOMAINS.map(v=>`<button data-dom="${v}" class="${s.domains.includes(v)?'on':''}">${v}</button>`).join("")}</div></div></div>
+ <div class="sec"><small>One notch from flipping</small><div class="flip">${d.fragile_on.length?d.fragile_on.map(f=>`<div>→ ${esc(f.replace(/ gives (\w+)/,(m,l)=>' gives '+(NICE[l]||l)))}</div>`).join(""):'<div>Stable. No single change moves this step.</div>'}</div></div>
+ <div class="sec"><small>Opportunity score</small><div class="flip">${d.opportunity_score}/100 · how much this step benefits from a redesign</div></div>
+ ${s.notes?`<p class="hint">📝 ${esc(s.notes)}</p>`:''}`;
+ $("#insp").classList.add("on");$("#ibg").classList.add("on")}
+function closeI(){sel=null;$("#insp").classList.remove("on");$("#ibg").classList.remove("on");document.querySelectorAll(".card").forEach(c=>c.classList.remove("sel"))}
+document.addEventListener("click",e=>{const t=e.target.closest("button,input");if(!t)return;
+ if(t.dataset.ex){closeI();loadExample(t.dataset.ex);return}
+ if(t.classList.contains("card")){openStep(t.dataset.id);return}
+ if(t.id==="close"){closeI();return}
+ if(t.id==="reset"){proc=JSON.parse(JSON.stringify(original));reanalyze(sel||proc.steps[0].id);return}
+ const s=sel&&proc.steps.find(x=>x.id===sel);if(!s)return;
+ if(t.dataset.k){if(s[t.dataset.k]===t.dataset.v)return;s[t.dataset.k]=t.dataset.v;reanalyze(s.id)}
+ else if(t.dataset.dom){const v=t.dataset.dom;s.domains=s.domains.includes(v)?s.domains.filter(x=>x!==v):[...s.domains,v];reanalyze(s.id)}
+ else if(t.dataset.bool){s[t.dataset.bool]=t.checked;reanalyze(s.id)}});
+$("#ibg").addEventListener("click",closeI);addEventListener("keydown",e=>{if(e.key==="Escape")closeI()});
+loadExample(current);
+</script>
+</body>
+</html>
