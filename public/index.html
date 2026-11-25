@@ -6,7 +6,7 @@
 <title>ProcessLab Studio · An AI that knows when not to use AI</title>
 <meta name="description" content="Interactive demo of ProcessLab: a deterministic rules engine that decides, step by step, where AI belongs in a business process.">
 <link rel="icon" href="/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--paper:#f7f7f3;--card:#fff;--ink:#111214;--soft:#5d6168;--line:#e4e4de;--cobalt:#3651e8;
@@ -106,6 +106,39 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .load{opacity:.5;pointer-events:none}
 @media (max-width:1100px){.board{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.board{grid-template-columns:1fr}.tabs{display:none}.wrap{padding:0 16px}}
+
+[hidden]{display:none!important}
+.namein.sm{font:400 13.5px "Space Grotesk",sans-serif;color:var(--soft)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.seg.sm{flex:none;padding:3px}.seg.sm button{flex:none;font-family:"Space Grotesk",sans-serif;font-size:13px;padding:7px 12px}
+.add{margin-left:auto;border:0;background:var(--ink);color:#fff;border-radius:10px;padding:9px 14px;font-weight:600;font-size:13.5px}
+.add:hover{background:var(--cobalt)}
+.flowwrap{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:40px;overflow:auto}
+#mm svg{max-width:100%;height:auto}
+.roi{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:center;background:var(--ink);color:#f4f4f0;border-radius:20px;padding:28px;margin-bottom:48px}
+.roi h2{font-size:26px;letter-spacing:-.02em;margin:6px 0}
+.roi .hint{color:#a5a7ad}
+.roi .eyebrow{color:#a5b4fc}
+.roi-in{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.roi-in label{font:500 11.5px "IBM Plex Mono",monospace;color:#a5a7ad;text-transform:uppercase;letter-spacing:.04em}
+.roi-in input{display:block;width:100%;margin-top:6px;background:#1c1d21;border:1px solid #2c2d33;border-radius:10px;padding:10px 12px;color:#fff;font:600 17px "Space Grotesk",sans-serif}
+.roi-out{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.roi-k{background:#1c1d21;border:1px solid #2c2d33;border-radius:14px;padding:16px}
+.roi-k small{font:500 11.5px "IBM Plex Mono",monospace;color:#a5a7ad;text-transform:uppercase}
+.roi-k b{display:block;font-size:30px;letter-spacing:-.03em;margin-top:4px}
+.roi-k.hl{background:linear-gradient(135deg,#3651e8,#7c3aed);border:0}
+.roi-k.hl small{color:#e0e7ff}
+.why{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff;border:1px dashed var(--human);font-size:13.5px}
+.why b{display:block;color:var(--human);margin-bottom:4px}
+.why li{margin-left:18px}
+.namein{width:100%;font:700 20px "Space Grotesk",sans-serif;border:1px solid transparent;border-radius:8px;padding:4px 6px;margin:4px -6px;background:none;color:var(--ink)}
+.namein:hover,.namein:focus{border-color:var(--line);background:#fff;outline:none}
+.del{margin-top:22px;width:100%;border:1px solid #f1c3cb;background:#fff;color:var(--human);border-radius:10px;padding:10px;font-weight:600}
+.del:hover{background:var(--humanbg)}
+body.before .card .chip,body.before .card .opp,body.before .card .gate,body.before .card .fr{display:none}
+@media (max-width:1100px){.roi{grid-template-columns:1fr}.roi-in{grid-template-columns:1fr}}
+@media print{header,.toolbar,.acts,.insp,.insp-bg,footer,.hero{display:none!important}}
 </style>
 </head>
 <body>
@@ -121,10 +154,21 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   <div class="rules"><b>The LLM interprets. The rules engine decides.</b><br>R1 already automated → KEEP<br>R2 structured + clear rule → AUTOMATE<br>R3 irreversible / high stakes → HUMAN<br>R4 messy, low stakes, reversible → AI<br>R5 messy with real stakes → AI + HUMAN</div>
  </section>
 
- <div class="proc"><div><h2 id="pname">Loading…</h2><p id="pdesc"></p></div><button class="reset" id="reset">↺ Reset changes</button></div>
+ <div class="proc"><div><h2 id="pname">Loading…</h2><p id="pdesc"></p></div><div class="acts"><button class="reset" id="share">🔗 Share link</button><button class="reset" id="export">⬇ Export PDF</button><button class="reset" id="reset">↺ Reset</button></div></div>
  <div class="stats" id="stats"></div>
+ <div class="toolbar">
+  <div class="seg sm" id="viewSeg"><button data-view="board" class="on">▦ Lane board</button><button data-view="flow">⤳ Flow map</button></div>
+  <div class="seg sm" id="phaseSeg"><button data-phase="before">Today</button><button data-phase="after" class="on">Redesigned</button></div>
+  <button class="add" id="addStep">＋ Add step</button>
+ </div>
  <div id="warns"></div>
  <div class="board" id="board"></div>
+ <div class="flowwrap" id="flow" hidden><div id="mm"></div><p class="hint">Arrows show dependencies. 🔒 marks a hard gate where AI is excluded by design.</p></div>
+ <section class="roi" id="roi">
+  <div><div class="eyebrow">ROI estimate</div><h2>What the redesign is worth</h2><p class="hint">Assumes manual steps take the full time, AI + Human steps keep 30% of it for review, and automated or AI steps take none. Edit the inputs.</p>
+   <div class="roi-in"><label>Runs per month<input type="number" id="r-runs" value="200" min="0"></label><label>Minutes per manual step<input type="number" id="r-min" value="6" min="0"></label><label>Hourly cost (USD)<input type="number" id="r-rate" value="25" min="0"></label></div></div>
+  <div class="roi-out" id="roiOut"></div>
+ </section>
 </main>
 
 <div class="insp-bg" id="ibg"></div>
@@ -137,16 +181,23 @@ const LANES=[["keep","Keep","Already automated. Don't re-solve it."],["automate"
 const NICE={keep:"Keep",automate:"Automate",ai:"AI",ai_assist:"AI + Human",human:"Human"};
 const ATTRS=[["input_type","Input",["structured","unstructured"]],["rule_clarity","Rule clarity",["clear","partial","none"]],["reversibility","Reversibility",["reversible","costly","irreversible"]],["consequence","Consequence",["low","medium","high"]],["volume","Volume",["low","medium","high"]],["exception_rate","Exception rate",["low","medium","high"]]];
 const DOMAINS=["financial","legal","safety","compliance","relationship","operational"];
-const NAMES={guest_onboarding:"Guest onboarding",deal_desk:"Sales deal desk",invoice_approval:"Invoice approval"};
-let examples=[],current="guest_onboarding",original=null,proc=null,report=null,sel=null,prevLanes={};
+const NAMES={guest_onboarding:"Guest onboarding",deal_desk:"Sales deal desk",invoice_approval:"Invoice approval",blank:"Start from scratch"};
+const LCOL={keep:["#f0f1f3","#6b7280"],automate:["#e9edff","#3651e8"],ai:["#f1eaff","#7c3aed"],ai_assist:["#e2f3f1","#0f766e"],human:["#fbe8eb","#b4233c"]};
+let examples=[],current="guest_onboarding",original=null,proc=null,report=null,mermaidSrc="",sel=null,prevLanes={},view="board",phase="after";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2600)}
-async function loadExample(name){current=name;document.body.classList.add("load");try{const r=await fetch("/api/analyze?example="+name);const d=await r.json();if(d.error)throw d.error;examples=d.examples;original=JSON.parse(JSON.stringify(d.process));apply(d,true)}catch(e){$("#pname").textContent="Couldn't reach the engine";$("#pdesc").textContent=String(e)}finally{document.body.classList.remove("load")}}
-async function reanalyze(changedId){document.body.classList.add("load");try{const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(proc)});const d=await r.json();if(d.error)throw d.error;const before=report.decisions.find(x=>x.step_id===changedId)?.lane;apply(d,false);const after=report.decisions.find(x=>x.step_id===changedId)?.lane;if(before!==after)toast(`Engine moved this step: ${NICE[before]} → ${NICE[after]}`);else toast(`Still ${NICE[after]}. Rule ${report.decisions.find(x=>x.step_id===changedId).rule_id} holds.`)}catch(e){toast("Engine error: "+(typeof e==="string"?e:"invalid change"))}finally{document.body.classList.remove("load")}}
-function apply(d,fresh){prevLanes=fresh?{}:Object.fromEntries(report.decisions.map(x=>[x.step_id,x.lane]));proc=d.process;report=d.report;render();if(sel)openStep(sel)}
+if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:"base",themeVariables:{fontFamily:"Space Grotesk",lineColor:"#9aa0a6",primaryTextColor:"#111214"},flowchart:{curve:"basis",nodeSpacing:30,rankSpacing:46}});
+const BLANK={name:"My process",description:"Built from scratch in ProcessLab Studio. Add steps and describe their traits; the engine places each one.",steps:[{id:"step_1",name:"Receive request",actor:"Team",system:null,input_type:"unstructured",rule_clarity:"partial",reversibility:"reversible",consequence:"low",domains:["operational"],volume:"medium",exception_rate:"medium",already_automated:false,depends_on:[],validates:[],notes:null}]};
+async function post(body){const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const d=await r.json();if(d.error)throw (d.details?.[0]?.msg||d.error);return d}
+async function loadExample(name,fromHash){current=name;document.body.classList.add("load");try{let d;if(name==="blank"){d=await post(BLANK);original=clone(BLANK)}else{const r=await fetch("/api/analyze?example="+name);d=await r.json();if(d.error)throw d.error;examples=d.examples;original=clone(d.process)}
+ if(fromHash){proc=fromHash;d=await post(proc)}apply(d,true)}catch(e){$("#pname").textContent="Couldn't reach the engine";$("#pdesc").textContent=String(e)}finally{document.body.classList.remove("load")}}
+async function reanalyze(changedId,msg){document.body.classList.add("load");const before=report.decisions.find(x=>x.step_id===changedId)?.lane;try{const d=await post(proc);apply(d,false);const dd=report.decisions.find(x=>x.step_id===changedId);if(msg)toast(msg);else if(dd){if(before&&before!==dd.lane)toast(`Engine moved this step: ${NICE[before]} → ${NICE[dd.lane]}`);else toast(`Still ${NICE[dd.lane]}. Rule ${dd.rule_id} holds.`)}}catch(e){toast("Engine rejected that: "+e)}finally{document.body.classList.remove("load")}}
+function apply(d,fresh){prevLanes=fresh?{}:Object.fromEntries((report?.decisions||[]).map(x=>[x.step_id,x.lane]));proc=d.process;report=d.report;mermaidSrc=d.mermaid;if(!examples.length)examples=["deal_desk","guest_onboarding","invoice_approval"];render();if(sel&&proc.steps.find(s=>s.id===sel))openStep(sel);else if(sel)closeI()}
+function laneOf(d,s){return phase==="before"?(s.already_automated?"keep":"human"):d.lane}
 function render(){
- $("#tabs").innerHTML=examples.map(e=>`<button class="${e===current?'on':''}" data-ex="${e}">${NAMES[e]||e}</button>`).join("");
+ $("#tabs").innerHTML=[...examples,"blank"].map(e=>`<button class="${e===current?'on':''}" data-ex="${e}">${NAMES[e]||e}</button>`).join("");
  $("#pname").textContent=proc.name;$("#pdesc").textContent=proc.description||"";
  const c=report.lane_counts,total=proc.steps.length;
  $("#stats").innerHTML=`<div class="stat"><small>Steps</small><b>${total}</b><div class="mix">${LANES.map(([k])=>`<i class="L-${k}" style="width:${(c[k]||0)/total*100}%;background:var(--c)"></i>`).join("")}</div></div>
@@ -154,34 +205,60 @@ function render(){
  <div class="stat"><small>AI involved</small><b>${(c.ai||0)+(c.ai_assist||0)}</b></div>
  <div class="stat"><small>Hard gates</small><b>${report.hard_gates.length}</b></div>
  <div class="stat"><small>Warnings</small><b style="color:${report.warnings.length?'#b45309':'inherit'}">${report.warnings.length}</b></div>`;
- $("#warns").innerHTML=report.warnings.map(w=>`<div class="warn"><span>⚠️</span><div><b>Graph check</b>${esc(w)}</div></div>`).join("");
+ $("#warns").innerHTML=phase==="after"?report.warnings.map(w=>`<div class="warn"><span>⚠️</span><div><b>Graph check</b>${esc(w)}</div></div>`).join(""):`<div class="warn" style="background:#f3f4f6;border-color:var(--line)"><span>🕰️</span><div><b>Today's process</b>Every step that isn't already automated is done by hand. Switch to <u>Redesigned</u> to see where each one belongs.</div></div>`;
+ document.body.classList.toggle("before",phase==="before");
  const byId=Object.fromEntries(proc.steps.map(s=>[s.id,s]));
- $("#board").innerHTML=LANES.map(([k,n,d])=>{const ds=report.decisions.filter(x=>x.lane===k);return `<div class="lane L-${k}"><div class="lane-h"><span class="dot" style="background:var(--c)"></span><b>${n}</b><small>${ds.length}</small></div><div class="lane-d">${d}</div>${ds.length?ds.map(x=>{const s=byId[x.step_id];const moved=prevLanes[x.step_id]&&prevLanes[x.step_id]!==x.lane;return `<button class="card L-${k} ${sel===x.step_id?'sel':''} ${moved?'moved':''}" data-id="${x.step_id}">${x.fragile_on.length?'<span class="fr" title="One label change away from flipping lanes"></span>':''}<b>${esc(x.step_name)}</b><div class="who">${esc(s.actor)}${s.system?' · '+esc(s.system):''}</div><div class="row"><span class="chip">${x.rule_id}</span>${x.hard_gate?'<span class="gate">🔒 gate</span>':''}<span class="opp" style="--o:${x.opportunity_score}%"><i></i>${x.opportunity_score}</span></div></button>`}).join(""):'<div class="empty">No steps in this lane</div>'}</div>`}).join("");
+ const lanes=phase==="before"?LANES.filter(([k])=>k==="keep"||k==="human").map(([k,n,d])=>k==="human"?[k,"Manual","Done by hand today."]:[k,n,d]):LANES;
+ $("#board").style.gridTemplateColumns=phase==="before"?"1fr 2fr":"";
+ $("#board").innerHTML=lanes.map(([k,n,d])=>{const ds=report.decisions.filter(x=>laneOf(x,byId[x.step_id])===k);return `<div class="lane L-${k}"><div class="lane-h"><span class="dot" style="background:var(--c)"></span><b>${n}</b><small>${ds.length}</small></div><div class="lane-d">${d}</div>${ds.length?ds.map(x=>{const s=byId[x.step_id];const moved=prevLanes[x.step_id]&&prevLanes[x.step_id]!==x.lane;return `<button class="card L-${k} ${sel===x.step_id?'sel':''} ${moved?'moved':''}" data-id="${x.step_id}">${x.fragile_on.length?'<span class="fr" title="One label change away from flipping lanes"></span>':''}<b>${esc(x.step_name)}</b><div class="who">${esc(s.actor)}${s.system?' · '+esc(s.system):''}</div><div class="row"><span class="chip">${x.rule_id}</span>${x.hard_gate?'<span class="gate">🔒 gate</span>':''}<span class="opp" style="--o:${x.opportunity_score}%"><i></i>${x.opportunity_score}</span></div></button>`}).join(""):'<div class="empty">No steps in this lane</div>'}</div>`}).join("");
+ $("#board").hidden=view!=="board";$("#flow").hidden=view!=="flow";if(view==="flow")drawFlow();
+ roi();
 }
-function openStep(id){sel=id;const s=proc.steps.find(x=>x.id===id),d=report.decisions.find(x=>x.step_id===id),o=original.steps.find(x=>x.id===id)||{};
+async function drawFlow(){if(!window.mermaid){$("#mm").textContent="Diagram library didn't load.";return}let src=mermaidSrc.replace(/classDef .*\n?/g,"");src+="\n"+Object.entries(LCOL).map(([k,[bg,c]])=>`classDef ${k} fill:${bg},stroke:${c},stroke-width:2px,color:#111214,rx:10,ry:10`).join("\n");if(phase==="before"){src=src.replace(/<b>[^<]*<\/b>/g,"").replace(/:::(automate|ai_assist|ai)\b/g,":::human")}try{const {svg}=await mermaid.render("m"+Date.now(),src);$("#mm").innerHTML=svg}catch(e){$("#mm").textContent="Couldn't draw this process."}}
+function roi(){const runs=+$("#r-runs").value||0,min=+$("#r-min").value||0,rate=+$("#r-rate").value||0;const c=report.lane_counts;const before=report.manual_steps_before;const after=(c.human||0)+0.3*(c.ai_assist||0);const hrsB=runs*min*before/60,hrsA=runs*min*after/60,saved=Math.max(0,hrsB-hrsA),pct=hrsB?Math.round(saved/hrsB*100):0;
+ $("#roiOut").innerHTML=`<div class="roi-k hl"><small>Hours saved / month</small><b>${saved.toFixed(0)}</b></div><div class="roi-k hl"><small>Cost saved / month</small><b>$${Math.round(saved*rate).toLocaleString()}</b></div><div class="roi-k"><small>Manual time</small><b>${hrsB.toFixed(0)}h → ${hrsA.toFixed(0)}h</b></div><div class="roi-k"><small>Workload cut</small><b>${pct}%</b></div>`}
+function whyNot(s,d){if(!(d.lane==="human"||d.hard_gate))return"";const r=[];if(s.reversibility==="irreversible")r.push("It's irreversible. A wrong call can't be undone, so there's no safety net for an AI mistake.");if(s.consequence==="high"&&s.domains.some(x=>["financial","legal","safety","compliance"].includes(x)))r.push(`High stakes in ${s.domains.filter(x=>["financial","legal","safety","compliance"].includes(x)).join(", ")}. Errors mean real money, legal exposure or harm.`);if(s.input_type==="structured"&&s.rule_clarity!=="clear"&&d.lane==="human")r.push("There's no clear rule yet. Writing one down would let this step be automated without AI.");if(d.hard_gate)r.push("This is a hard gate: a tested rule decides, every outcome is logged, and AI is kept out on purpose.");if(!r.length)r.push("The judgment involved is too consequential to delegate.");return `<div class="why"><b>Why not AI here?</b><ul>${r.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`}
+function openStep(id){sel=id;const s=proc.steps.find(x=>x.id===id),d=report.decisions.find(x=>x.step_id===id),o=(original.steps||[]).find(x=>x.id===id)||{};
  document.querySelectorAll(".card").forEach(c=>c.classList.toggle("sel",c.dataset.id===id));
- $("#insp").innerHTML=`<button class="x" id="close">✕</button><div class="eyebrow">Step · ${esc(s.id)}</div><h3>${esc(s.name)}</h3><div class="who">${esc(s.actor)}${s.system?' · '+esc(s.system):''}</div>
- <div class="verdict L-${d.lane}"><div class="lab">${NICE[d.lane]}<span class="chip">${d.rule_id}</span>${d.hard_gate?'<span class="gate">🔒 hard gate</span>':''}</div><ul>${d.reasons.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>
+ const others=proc.steps.filter(x=>x.id!==id);
+ $("#insp").innerHTML=`<button class="x" id="close">✕</button><div class="eyebrow">Step · ${esc(s.id)}</div><input class="namein" id="nm" value="${esc(s.name)}" aria-label="Step name"><input class="namein sm" id="actor" value="${esc(s.actor)}" aria-label="Who does it">
+ <div class="verdict L-${d.lane}"><div class="lab">${NICE[d.lane]}<span class="chip">${d.rule_id}</span>${d.hard_gate?'<span class="gate">🔒 hard gate</span>':''}</div><ul>${d.reasons.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>${whyNot(s,d)}
  <div class="sec"><small>Step traits · change any to re-run the engine</small>
  <div class="attr"><label>Already automated</label><label class="toggle"><input type="checkbox" data-bool="already_automated" ${s.already_automated?'checked':''}> This step already runs on its own today</label></div>
- ${ATTRS.map(([k,n,opts])=>`<div class="attr"><label>${n}</label><div class="seg">${opts.map(v=>`<button data-k="${k}" data-v="${v}" class="${s[k]===v?'on':''} ${o[k]!==s[k]&&s[k]===v?'chg':''}">${v}</button>`).join("")}</div></div>`).join("")}
- <div class="attr"><label>Domains</label><div class="seg">${DOMAINS.map(v=>`<button data-dom="${v}" class="${s.domains.includes(v)?'on':''}">${v}</button>`).join("")}</div></div></div>
+ ${ATTRS.map(([k,n,opts])=>`<div class="attr"><label>${n}</label><div class="seg">${opts.map(v=>`<button data-k="${k}" data-v="${v}" class="${s[k]===v?'on':''} ${o[k]!==undefined&&o[k]!==s[k]&&s[k]===v?'chg':''}">${v}</button>`).join("")}</div></div>`).join("")}
+ <div class="attr"><label>Domains</label><div class="seg">${DOMAINS.map(v=>`<button data-dom="${v}" class="${s.domains.includes(v)?'on':''}">${v}</button>`).join("")}</div></div>
+ ${others.length?`<div class="attr"><label>Depends on</label><div class="seg">${others.map(v=>`<button data-dep="${v.id}" class="${s.depends_on.includes(v.id)?'on':''}">${esc(v.name.slice(0,22))}</button>`).join("")}</div></div>`:''}</div>
  <div class="sec"><small>One notch from flipping</small><div class="flip">${d.fragile_on.length?d.fragile_on.map(f=>`<div>→ ${esc(f.replace(/ gives (\w+)/,(m,l)=>' gives '+(NICE[l]||l)))}</div>`).join(""):'<div>Stable. No single change moves this step.</div>'}</div></div>
  <div class="sec"><small>Opportunity score</small><div class="flip">${d.opportunity_score}/100 · how much this step benefits from a redesign</div></div>
- ${s.notes?`<p class="hint">📝 ${esc(s.notes)}</p>`:''}`;
- $("#insp").classList.add("on");$("#ibg").classList.add("on")}
+ ${s.notes?`<p class="hint">📝 ${esc(s.notes)}</p>`:''}${proc.steps.length>1?'<button class="del" id="delStep">Delete this step</button>':''}`;
+ $("#insp").classList.add("on");$("#ibg").classList.add("on");
+ $("#nm").onchange=e=>{s.name=e.target.value.trim()||s.name;reanalyze(s.id,"Renamed")};$("#actor").onchange=e=>{s.actor=e.target.value.trim()||s.actor;reanalyze(s.id,"Updated")}}
 function closeI(){sel=null;$("#insp").classList.remove("on");$("#ibg").classList.remove("on");document.querySelectorAll(".card").forEach(c=>c.classList.remove("sel"))}
-document.addEventListener("click",e=>{const t=e.target.closest("button,input");if(!t)return;
- if(t.dataset.ex){closeI();loadExample(t.dataset.ex);return}
+function addStep(){let n=proc.steps.length+1;while(proc.steps.some(s=>s.id==="step_"+n))n++;const id="step_"+n;proc.steps.push({id,name:"New step "+n,actor:"Team",system:null,input_type:"unstructured",rule_clarity:"partial",reversibility:"reversible",consequence:"low",domains:["operational"],volume:"medium",exception_rate:"medium",already_automated:false,depends_on:[],validates:[],notes:null});sel=id;reanalyze(id,"Step added. Describe it on the right.")}
+function delStep(){const id=sel;proc.steps=proc.steps.filter(s=>s.id!==id);proc.steps.forEach(s=>{s.depends_on=s.depends_on.filter(x=>x!==id);s.validates=s.validates.filter(x=>x!==id)});closeI();reanalyze(proc.steps[0].id,"Step deleted")}
+function share(){const data={ex:current,p:proc};const enc=btoa(unescape(encodeURIComponent(JSON.stringify(data))));const url=location.origin+location.pathname+"#s="+enc;navigator.clipboard?.writeText(url).then(()=>toast("Link copied. Anyone with it sees your exact version."),()=>prompt("Copy this link:",url))}
+function exportPdf(){const c=report.lane_counts,byId=Object.fromEntries(proc.steps.map(s=>[s.id,s]));const rows=report.decisions.map(d=>`<tr><td>${esc(d.step_name)}<div class=w>${esc(byId[d.step_id].actor)}</div></td><td><span class="b" style="background:${LCOL[d.lane][0]};color:${LCOL[d.lane][1]}">${NICE[d.lane]}${d.hard_gate?' 🔒':''}</span></td><td>${d.rule_id}</td><td>${esc(d.reasons.join(" "))}</td></tr>`).join("");
+ const w=window.open("","_blank");if(!w){toast("Allow pop-ups to export");return}
+ w.document.write(`<!doctype html><html><head><title>${esc(proc.name)} · ProcessLab report</title><style>body{font:13px/1.5 system-ui,sans-serif;color:#111;margin:36px}h1{font-size:22px;margin:0}p{color:#555}.k{display:flex;gap:10px;margin:16px 0}.k div{border:1px solid #ddd;border-radius:8px;padding:8px 12px}.k b{display:block;font-size:18px}table{width:100%;border-collapse:collapse;margin-top:10px}td,th{border-bottom:1px solid #eee;padding:8px;text-align:left;vertical-align:top}th{font-size:11px;text-transform:uppercase;color:#777}.b{padding:2px 8px;border-radius:5px;font-weight:600;white-space:nowrap}.w{color:#777;font-size:11px}footer{margin-top:20px;color:#888;font-size:11px}</style></head><body><h1>${esc(proc.name)}</h1><p>${esc(proc.description||"")}</p><div class=k><div>Steps<b>${proc.steps.length}</b></div><div>Manual work<b>${report.manual_steps_before} → ${report.manual_steps_after}</b></div><div>AI involved<b>${(c.ai||0)+(c.ai_assist||0)}</b></div><div>Hard gates<b>${report.hard_gates.length}</b></div></div><table><tr><th>Step</th><th>Lane</th><th>Rule</th><th>Why</th></tr>${rows}</table>${report.warnings.length?'<p><b>Warnings:</b> '+report.warnings.map(esc).join(" ")+'</p>':''}<footer>Generated with ProcessLab Studio · processlab-studio.vercel.app</footer><script>setTimeout(()=>print(),300)<\/script></body></html>`);w.document.close()}
+document.addEventListener("click",e=>{const t=e.target.closest("button,input[type=checkbox]");if(!t)return;
+ if(t.dataset.ex){closeI();history.replaceState(null,"",location.pathname);loadExample(t.dataset.ex);return}
+ if(t.dataset.view){view=t.dataset.view;document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("on",b===t));render();return}
+ if(t.dataset.phase){phase=t.dataset.phase;document.querySelectorAll("[data-phase]").forEach(b=>b.classList.toggle("on",b===t));render();if(phase==="after")toast("Redesigned: each step moved to the lane it belongs in");return}
  if(t.classList.contains("card")){openStep(t.dataset.id);return}
  if(t.id==="close"){closeI();return}
- if(t.id==="reset"){proc=JSON.parse(JSON.stringify(original));reanalyze(sel||proc.steps[0].id);return}
+ if(t.id==="addStep"){addStep();return}
+ if(t.id==="delStep"){delStep();return}
+ if(t.id==="share"){share();return}
+ if(t.id==="export"){exportPdf();return}
+ if(t.id==="reset"){proc=clone(original);reanalyze(sel||proc.steps[0].id,"Back to the original");return}
  const s=sel&&proc.steps.find(x=>x.id===sel);if(!s)return;
  if(t.dataset.k){if(s[t.dataset.k]===t.dataset.v)return;s[t.dataset.k]=t.dataset.v;reanalyze(s.id)}
  else if(t.dataset.dom){const v=t.dataset.dom;s.domains=s.domains.includes(v)?s.domains.filter(x=>x!==v):[...s.domains,v];reanalyze(s.id)}
+ else if(t.dataset.dep){const v=t.dataset.dep;s.depends_on=s.depends_on.includes(v)?s.depends_on.filter(x=>x!==v):[...s.depends_on,v];reanalyze(s.id,"Dependency updated")}
  else if(t.dataset.bool){s[t.dataset.bool]=t.checked;reanalyze(s.id)}});
+["r-runs","r-min","r-rate"].forEach(i=>$("#"+i).addEventListener("input",()=>report&&roi()));
 $("#ibg").addEventListener("click",closeI);addEventListener("keydown",e=>{if(e.key==="Escape")closeI()});
-loadExample(current);
+(function boot(){const m=location.hash.match(/#s=(.+)/);if(m){try{const d=JSON.parse(decodeURIComponent(escape(atob(m[1]))));loadExample(d.ex||"guest_onboarding",d.p);toast("Loaded a shared version");return}catch{}}loadExample(current)})();
 </script>
 </body>
 </html>
