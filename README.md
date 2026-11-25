@@ -1,8 +1,12 @@
+<p align="center"><img src="docs/logo.png" alt="ProcessLab Studio" width="560"></p>
+
 # ProcessLab
 
 [![tests](https://github.com/ynagonzalesss/processlab/actions/workflows/tests.yml/badge.svg)](https://github.com/ynagonzalesss/processlab/actions/workflows/tests.yml)
 
 **An AI that knows when *not* to use AI.**
+
+**▶ Live demo: [processlab.vercel.app](https://processlab.vercel.app)**. Pick a process, click any step, change its traits and watch the real engine re-decide.
 
 ProcessLab takes a business process and decides, step by step, where AI belongs and where it doesn't. Each step lands in one of five lanes, and every placement comes with a reason you can audit.
 
@@ -27,7 +31,7 @@ A language model is good at reading messy input. It should not be the thing that
 - [x] **Graph checks:** gate-input warnings, label sensitivity, Mermaid diagram of the redesign
 - [ ] Phase 3: Redesign view + before/after comparison
 - [ ] Phase 4: Simulation with sample cases + audit log
-- [ ] Phase 5: Streamlit UI + public deploy
+- [x] **Phase 5:** Web UI (ProcessLab Studio) + public deploy on Vercel
 
 ## Quick start
 
