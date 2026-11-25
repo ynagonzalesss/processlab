@@ -6,7 +6,7 @@
 
 **An AI that knows when *not* to use AI.**
 
-**▶ Live demo: [processlab.vercel.app](https://processlab.vercel.app)**. Pick a process, click any step, change its traits and watch the real engine re-decide.
+**▶ Live demo: [processlab-studio.vercel.app](https://processlab-studio.vercel.app)**. Pick a process, click any step, change its traits and watch the real engine re-decide.
 
 ProcessLab takes a business process and decides, step by step, where AI belongs and where it doesn't. Each step lands in one of five lanes, and every placement comes with a reason you can audit.
 
